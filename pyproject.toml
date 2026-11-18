@@ -1,0 +1,16 @@
+[project]
+name = "f1engineer"
+version = "0.1.0"
+description = "F1 23 race engineer: live telemetry coaching with spoken calls"
+requires-python = ">=3.10"
+readme = "README.md"
+
+[project.scripts]
+f1engineer = "f1engineer.__main__:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["f1engineer"]
