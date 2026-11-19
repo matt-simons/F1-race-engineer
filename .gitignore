@@ -6,3 +6,4 @@ recordings/
 *.f1rec
 *.csv
 .env
+voices/

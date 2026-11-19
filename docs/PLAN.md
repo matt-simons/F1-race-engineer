@@ -65,17 +65,17 @@ Haiku never sees raw 60 Hz data. The app turns each lap into a small JSON summar
 
 **Pad-specific coaching:** trigger advice about how fast you squeeze and release; steering advice about when you turn in and how long you hold lock. Later: suggest controller settings (trigger saturation, steering linearity).
 
-### 3.4 Call manager
+### 3.4 Call manager ✅ (M2)
 - Priority queue: P1 urgent (can interrupt), P2 race info, P3 coaching.
 - Quiet zones: P2/P3 only on straights.
 - De-duplication, cool-downs, escalation, per-lap talk budget.
 - Modes chosen from session type: Practice (chatty, debriefs), Qualifying (silent on push lap), Race (strategy first).
 
-### 3.5 Push-to-talk (Xbox controller)
+### 3.5 Push-to-talk (Xbox controller) ✅ (M2)
 - Bind spare buttons to **UDP Action 1/2** in game controls. Action 1: repeat last call. Action 2: status update.
 - Later: hold to ask a spoken question (local Whisper → Haiku).
 
-### 3.6 Text-to-speech: Piper
+### 3.6 Text-to-speech: Piper ✅ (M2, Windows voice as fallback)
 - Free, local, low delay. Optional radio effect. Common phrases pre-rendered for zero delay.
 
 ### 3.7 Haiku integration
@@ -89,8 +89,8 @@ Python, stdlib for M1; later NumPy, SQLite, Anthropic SDK, Piper, sounddevice.
 | # | Milestone | Status |
 |---|---|---|
 | M1 | Telemetry in: decode, live readout, record/replay, CSV export | ✅ Done |
-| M2 | Voice out + call queue + quiet zones + controller push-to-talk | Next |
-| M3 | Rules engine: lock-ups, TC intervention, temps, wear, fuel, ERS | |
+| M2 | Voice out + call queue + quiet zones + controller push-to-talk | ✅ Done |
+| M3 | Rules engine: lock-ups, TC intervention, temps, wear, fuel, ERS | Next |
 | M4 | Corner model + reference lap | |
 | M5 | Haiku coach | |
 | M6 | Race strategy | |

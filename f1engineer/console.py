@@ -22,7 +22,7 @@ def _wheels(values, fmt="{:>4}") -> str:
     return f"FL {fmt.format(v['FL'])}  FR {fmt.format(v['FR'])}  RL {fmt.format(v['RL'])}  RR {fmt.format(v['RR'])}"
 
 
-def render(s: SessionState) -> str:
+def render(s: SessionState, calls=None) -> str:
     lines = []
     if s.session:
         ss = s.session
@@ -59,6 +59,10 @@ def render(s: SessionState) -> str:
                      f"TC {st['traction_control_name']}  ABS {'on' if st['anti_lock_brakes'] else 'off'}")
     if s.last_event:
         lines.append(f"Last event: {s.last_event}")
+    if calls is not None:
+        lines.append(f"Engineer ({calls.mode} mode, {len(calls.queue)} queued):")
+        for _, c in calls.history[-5:]:
+            lines.append(f"  P{c.priority}  {c.text}")
     counts = "  ".join(f"{k}:{v}" for k, v in sorted(s.packet_counts.items()))
     lines.append(f"Packets  {counts}")
     if s.errors:
@@ -69,10 +73,10 @@ def render(s: SessionState) -> str:
 _first = True
 
 
-def draw(s: SessionState) -> None:
+def draw(s: SessionState, calls=None) -> None:
     global _first
     if _first and os.name == "nt":
         os.system("")  # enables ANSI escape codes in the Windows console
     _first = False
-    sys.stdout.write("\x1b[H\x1b[2J" + render(s) + "\n")
+    sys.stdout.write("\x1b[H\x1b[2J" + render(s, calls) + "\n")
     sys.stdout.flush()
