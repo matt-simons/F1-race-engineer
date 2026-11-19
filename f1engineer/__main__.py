@@ -210,8 +210,8 @@ def cmd_export(args) -> int:
 
 
 def _voice_args(p) -> None:
-    p.add_argument("--voice-engine", default="auto", choices=["auto", "piper", "sapi", "print"],
-                   help="auto tries Piper, then the Windows voice, then text only")
+    p.add_argument("--voice-engine", default="auto", choices=["auto", "piper", "espeak", "sapi", "print"],
+                   help="auto tries Piper, then espeak-ng (Linux) or the Windows voice, then text only")
     p.add_argument("--voice-model", help=f"Piper .onnx model (default "
                    f"{DEFAULT_VOICE_DIR / (DEFAULT_VOICE + '.onnx')})")
     p.add_argument("--no-radio", action="store_true", help="turn off the team-radio effect")

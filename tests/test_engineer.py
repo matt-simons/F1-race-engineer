@@ -84,6 +84,21 @@ class TestVoice(unittest.TestCase):
         self.assertEqual(tts.rendered, ["Box box"])
 
 
+class TestLinuxPlayer(unittest.TestCase):
+    def test_prefers_pipewire(self):
+        from f1engineer.voice import CommandPlayer
+        have = {"pw-play", "paplay", "aplay"}
+        self.assertEqual(CommandPlayer(which=lambda x: x in have).name, "pw-play")
+        self.assertEqual(CommandPlayer(which=lambda x: x == "paplay").name, "paplay")
+        with self.assertRaises(RuntimeError):
+            CommandPlayer(which=lambda x: False)
+
+    def test_espeak_missing_is_reported(self):
+        from f1engineer.voice import EspeakTTS, TTSError
+        with self.assertRaises(TTSError):
+            EspeakTTS(which=lambda x: None)
+
+
 class TestCallManager(unittest.TestCase):
     def test_p1_speaks_mid_corner(self):
         state, clock, player, calls = make()

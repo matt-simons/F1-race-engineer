@@ -3,7 +3,7 @@
 ## Decisions
 | Topic | Decision |
 |---|---|
-| Platform | **PC**, app runs on the same machine as the game, telemetry on localhost |
+| Platform | **PC running Bazzite (Linux)**, F1 23 via Steam/Proton; app runs on the same machine, telemetry on localhost. Windows also supported |
 | Use | **Practice and races equally**, so all modes are first-class |
 | Input | **Xbox controller (pad)**, coaching tuned for triggers and stick |
 | Assists | **ABS off, partial traction control** |
@@ -75,7 +75,7 @@ Haiku never sees raw 60 Hz data. The app turns each lap into a small JSON summar
 - Bind spare buttons to **UDP Action 1/2** in game controls. Action 1: repeat last call. Action 2: status update.
 - Later: hold to ask a spoken question (local Whisper → Haiku).
 
-### 3.6 Text-to-speech: Piper ✅ (M2, Windows voice as fallback)
+### 3.6 Text-to-speech: Piper ✅ (M2; espeak-ng / Windows voice as fallback; PipeWire playback on Linux)
 - Free, local, low delay. Optional radio effect. Common phrases pre-rendered for zero delay.
 
 ### 3.7 Haiku integration

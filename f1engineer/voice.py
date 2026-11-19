@@ -1,10 +1,14 @@
 """Text to speech and audio playback.
 
 Speech engines, best first:
-  piper  free neural voice, runs locally. `pip install piper-tts`, then
-         `python -m f1engineer download-voice` to fetch a voice model.
-  sapi   the built-in Windows voice. Nothing to install; more robotic.
-  print  no audio, just prints the call (for testing).
+  piper   free neural voice, runs locally. `pip install piper-tts`, then
+          `python -m f1engineer download-voice` to fetch a voice model.
+  espeak  (Linux) espeak-ng, if installed. Robotic.
+  sapi    (Windows) the built-in Windows voice. More robotic.
+  print   no audio, just prints the call (for testing).
+
+Playback: PipeWire (pw-play) / PulseAudio (paplay) / ALSA (aplay) on Linux,
+winsound on Windows.
 
 Every engine returns 16-bit mono WAV bytes, so the radio effect and the
 player work the same whatever the engine.
@@ -202,6 +206,23 @@ class SapiTTS:
         return write_wav(samples, 22050)
 
 
+class EspeakTTS:
+    """espeak-ng: robotic but tiny, often already installed on Linux."""
+
+    name = "espeak"
+
+    def __init__(self, which=shutil.which):
+        exe = which("espeak-ng") or which("espeak")
+        if not exe:
+            raise TTSError("espeak-ng not found")
+        self._exe = exe
+
+    def synthesize(self, text: str) -> bytes:
+        out = subprocess.run([self._exe, "-v", "en-gb", "-s", "175", "--stdout", text],
+                             capture_output=True, check=True)
+        return out.stdout
+
+
 class PrintTTS:
     """No audio: prints calls. Used for tests and when nothing else works."""
 
@@ -214,8 +235,9 @@ class PrintTTS:
 def make_tts(engine: str = "auto", model: str | Path | None = None,
              log=print) -> TTS:
     model = Path(model) if model else DEFAULT_VOICE_DIR / f"{DEFAULT_VOICE}.onnx"
-    order = {"auto": ["piper", "sapi", "print"], "piper": ["piper"],
-             "sapi": ["sapi"], "print": ["print"]}[engine]
+    fallback = "sapi" if os.name == "nt" else "espeak"
+    order = {"auto": ["piper", fallback, "print"], "piper": ["piper"],
+             "sapi": ["sapi"], "espeak": ["espeak"], "print": ["print"]}[engine]
     errors = []
     for name in order:
         try:
@@ -223,6 +245,8 @@ def make_tts(engine: str = "auto", model: str | Path | None = None,
                 return PiperTTS(model)
             if name == "sapi":
                 return SapiTTS()
+            if name == "espeak":
+                return EspeakTTS()
             return PrintTTS()
         except TTSError as e:
             errors.append(f"{name}: {e}")
@@ -287,31 +311,51 @@ class SilentPlayer:
         pass
 
 
-class AplayPlayer:
-    """Linux playback for development."""
+class CommandPlayer:
+    """Linux playback through a command-line player. PipeWire's pw-play is
+    first (Bazzite, Fedora, SteamOS all use PipeWire), then paplay, then aplay.
+    Each call runs a short-lived player process; stop() kills it."""
 
-    def __init__(self):
-        if not shutil.which("aplay"):
-            raise RuntimeError("aplay not found")
+    COMMANDS = (
+        ("pw-play", ["pw-play"]),
+        ("paplay", ["paplay"]),
+        ("aplay", ["aplay", "-q"]),
+    )
+
+    def __init__(self, which=shutil.which):
+        for exe, argv in self.COMMANDS:
+            if which(exe):
+                self.argv = argv
+                self.name = exe
+                break
+        else:
+            raise RuntimeError("no audio player found (pw-play, paplay or aplay)")
+        self._dir = Path(tempfile.mkdtemp(prefix="f1engineer_"))
+        self._n = 0
         self._p: subprocess.Popen | None = None
 
     def play(self, wav_bytes: bytes) -> None:
         self.stop()
-        self._p = subprocess.Popen(["aplay", "-q", "-"], stdin=subprocess.PIPE)
-        self._p.stdin.write(wav_bytes)
-        self._p.stdin.close()
+        self._n = (self._n + 1) % 4
+        path = self._dir / f"call{self._n}.wav"
+        path.write_bytes(wav_bytes)
+        self._p = subprocess.Popen(self.argv + [str(path)],
+                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     def stop(self) -> None:
         if self._p and self._p.poll() is None:
             self._p.terminate()
 
 
-def make_player() -> Player:
+def make_player(log=print) -> Player:
     if os.name == "nt":
         return WinsoundPlayer()
     try:
-        return AplayPlayer()
-    except RuntimeError:
+        player = CommandPlayer()
+        log(f"[voice] playing through {player.name}")
+        return player
+    except RuntimeError as e:
+        log(f"[voice] {e}; calls will be text only")
         return SilentPlayer()
 
 
